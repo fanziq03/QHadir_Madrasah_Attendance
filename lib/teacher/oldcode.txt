@@ -1,0 +1,189 @@
+StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                  .collection('classes')
+                  .where('classTeacher', isEqualTo: _id)
+                  .orderBy('className')
+                  .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.data!.docs.isEmpty) {
+                    // No classes found, show a message
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Lottie.asset(
+                            'assets/lottie/cat.json',
+                            width: 200,
+                            height: 200,
+                            repeat: true,
+                            fit: BoxFit.contain,
+                          ),
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    "No classes for you to tick!",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    "\n\nPlease contact the staff to\nassign a class for you..",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Visibility(
+                    visible: snapshot.hasData,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: snapshot.data!.docs.length * 100.0,
+                          child: ListView.builder(
+                            itemCount: snapshot.data!.docs.length,
+                            itemBuilder: (context, index) {
+                              DocumentSnapshot classDoc = snapshot.data!.docs[index];
+                              return FutureBuilder(
+                                future: _getStudentCount(classDoc['className']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ClassAttendance(
+                                              userId: _id?? '',
+                                              className: classDoc['className'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        height: 80,
+                                        margin: EdgeInsets.only(
+                                          bottom: 16.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Color.fromARGB(255, 52, 164, 153),
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 80,
+                                              height: 80,
+                                              decoration: BoxDecoration(
+                                                color: Color.fromARGB(255, 2, 88, 96),
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(14),
+                                                  bottomLeft: Radius.circular(14),
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      snapshot.data.toString(), // Display student count
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 22,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    Text(
+                                                      "Student",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Stack(
+                                                children: [
+                                                  Positioned(
+                                                    top: 55,
+                                                    right: -6,
+                                                    child: CircularContainer(
+                                                      height: 50,
+                                                      width: 50,
+                                                      backgroundColor: const Color.fromARGB(255, 2, 88, 96).withOpacity(0.2),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    top: -30,
+                                                    right: -40,
+                                                    child: CircularContainer(
+                                                      height: 100,
+                                                      width: 100,
+                                                      backgroundColor: const Color.fromARGB(255, 2, 88, 96).withOpacity(0.2),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: EdgeInsets.fromLTRB(12, 12, 12, 12),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Text(
+                                                          classDoc['className'], // Display class name
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 18,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    return Center(child: CircularProgressIndicator());
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              )
